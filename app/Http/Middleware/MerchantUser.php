@@ -15,7 +15,7 @@ class MerchantUser
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if ($request->merchant == $request->user()->merchant_id) {
+        if ($request->merchant->id == $request->user()->merchant_id) {
             return $next($request);
         }
 

@@ -34,7 +34,7 @@ class IndexTest extends TestCase
             ->count($count = $this->faker()->numberBetween(1, 10))
             ->create(['merchant_id' => $merchant->id]);
 
-        $this->getJson("/api/v1/merchant/$merchant->id/admin/product/categories")
+        $this->getJson("/api/v1/merchants/$merchant->id/admin/product/categories")
             ->assertSuccessful()
             ->assertJsonCount($count, 'data')
             ->assertJsonFragment(['total' => $count])
@@ -59,11 +59,41 @@ class IndexTest extends TestCase
      * @group merchant.admin
      * @group merchant.admin.product.category
      */
+    public function merchant_admin_cannot_get_product_categories_of_other_merchants(): void
+    {
+        $merchant = Merchant::factory()->create();
+
+        Sanctum::actingAs(
+            User::factory()
+                ->create(['merchant_id' => $merchant->id])
+        );
+
+        $categories = ProductCategory::factory()
+            ->count($count = $this->faker()->numberBetween(1, 3))
+            ->create(['merchant_id' => $merchant->id]);
+
+        $otherMerchantCategories = ProductCategory::factory()
+            ->count($this->faker()->numberBetween(1, 3))
+            ->create();
+
+        $this->getJson("/api/v1/merchants/$merchant->id/admin/product/categories")
+            ->assertSuccessful()
+            ->assertJsonFragment(['total' => $count])
+            ->assertJsonFragment(['id' => $categories->random()->id])
+            ->assertJsonMissing(['id' => $otherMerchantCategories->random()->id]);
+    }
+
+    /**
+     * @test
+     * @group merchant
+     * @group merchant.admin
+     * @group merchant.admin.product.category
+     */
     public function guess_cannot_get_product_categories()
     {
         $merchant = Merchant::factory()->create();
 
-        $this->getJson("/api/v1/merchant/$merchant->id/admin/product/categories")
+        $this->getJson("/api/v1/merchants/$merchant->id/admin/product/categories")
             ->assertUnauthorized();
     }
 
@@ -79,7 +109,7 @@ class IndexTest extends TestCase
 
         Sanctum::actingAs(User::factory()->create());
 
-        $this->getJson("/api/v1/merchant/$merchant->id/admin/product/categories")
+        $this->getJson("/api/v1/merchants/$merchant->id/admin/product/categories")
             ->assertForbidden();
     }
 }

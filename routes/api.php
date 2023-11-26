@@ -19,8 +19,8 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::group(['prefix' => '/v1/merchant/{merchant}'], function () {
+Route::group(['prefix' => '/v1/merchants/{merchant}'], function () {
     Route::group(['prefix' => '/admin', 'middleware' => ['merchant.user', 'auth:sanctum']], function () {
-        Route::get('/product/categories', [ProductCategoryController::class, 'index']);
+        Route::apiResource('/product/categories', ProductCategoryController::class);
     });
 });
